@@ -5,6 +5,7 @@ import FocusPage from './components/FocusPage';
 import { useAuth } from './hooks/useAuth';
 import { useHabits } from './hooks/useHabits';
 import { Habit, GrowthData } from './types';
+import { getCurrentUser } from './utils/storage';
 
 // 主应用内容组件的props类型
 interface MainContentProps {
@@ -21,24 +22,24 @@ interface MainContentProps {
 }
 
 // 主应用内容组件
-const MainContent = ({ 
-  logout, 
-  habits, 
-  newHabit, 
-  setNewHabit, 
-  showSuggestionModal, 
-  setShowSuggestionModal, 
-  growthData, 
-  recommendedDuration, 
-  handleAddHabit, 
-  handleStartFocusWithNavigation 
+const MainContent = ({
+  logout,
+  habits,
+  newHabit,
+  setNewHabit,
+  showSuggestionModal,
+  setShowSuggestionModal,
+  growthData,
+  recommendedDuration,
+  handleAddHabit,
+  handleStartFocusWithNavigation
 }: MainContentProps) => (
   <div className="container">
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: '500px' }}>
       <h1>Seed - 习惯养成助手</h1>
       <button onClick={logout}>登出</button>
     </div>
-    
+
     {/* 日常记录部分 */}
     <div className="habit-section">
       <h2>日常记录</h2>
@@ -51,7 +52,7 @@ const MainContent = ({
         />
         <button type="submit">记录</button>
       </form>
-      
+
       <ul className="habit-list">
         {habits.map(habit => (
           <li key={habit.id} className="habit-item">
@@ -61,16 +62,16 @@ const MainContent = ({
         ))}
       </ul>
     </div>
-    
+
     {/* 成长系统部分 */}
     <div className="growth-system">
       <h2>习惯种子</h2>
       <div className="growth-level">等级：{growthData.level}</div>
       <div className="growth-bar">
-        <div 
-          className="growth-progress" 
-          style={{ 
-            width: `${Math.min((growthData.experience / growthData.nextLevelExperience) * 100, 100)}%` 
+        <div
+          className="growth-progress"
+          style={{
+            width: `${Math.min((growthData.experience / growthData.nextLevelExperience) * 100, 100)}%`
           }}
         ></div>
       </div>
@@ -83,7 +84,7 @@ const MainContent = ({
         <p>推荐专注时长：{recommendedDuration}分钟</p>
       </div>
     </div>
-    
+
     {/* 建议弹窗 */}
     {showSuggestionModal && (
       <div className="modal">
@@ -103,16 +104,16 @@ const MainContent = ({
 
 function App() {
   const { currentUser, isLoading, logout } = useAuth();
-  const { 
-    habits, 
-    newHabit, 
-    setNewHabit, 
-    showSuggestionModal, 
-    setShowSuggestionModal, 
-    growthData, 
-    recommendedDuration, 
-    handleAddHabit, 
-    handleStartFocus 
+  const {
+    habits,
+    newHabit,
+    setNewHabit,
+    showSuggestionModal,
+    setShowSuggestionModal,
+    growthData,
+    recommendedDuration,
+    handleAddHabit,
+    handleStartFocus
   } = useHabits(currentUser);
   const navigate = useNavigate();
 
@@ -126,38 +127,41 @@ function App() {
     return <div>加载中...</div>;
   }
 
+  // 检查实际登录状态，同时考虑localStorage和React状态
+  const isUserLoggedIn = currentUser || getCurrentUser() !== null;
+
   return (
-      <Routes>
-        <Route 
-          path="/" 
-          element={currentUser ? (
-            <MainContent 
-              logout={logout}
-              habits={habits}
-              newHabit={newHabit}
-              setNewHabit={setNewHabit}
-              showSuggestionModal={showSuggestionModal}
-              setShowSuggestionModal={setShowSuggestionModal}
-              growthData={growthData}
-              recommendedDuration={recommendedDuration}
-              handleAddHabit={handleAddHabit}
-              handleStartFocusWithNavigation={handleStartFocusWithNavigation}
-            />
-          ) : <Navigate to="/login" />} 
-        />
-        <Route 
-          path="/login" 
-          element={!currentUser ? <Login /> : <Navigate to="/" />} 
-        />
-        <Route 
-          path="/register" 
-          element={!currentUser ? <Register /> : <Navigate to="/" />} 
-        />
-        <Route 
-          path="/focus" 
-          element={currentUser ? <FocusPage /> : <Navigate to="/login" />} 
-        />
-      </Routes>
+    <Routes>
+      <Route
+        path="/"
+        element={isUserLoggedIn ? (
+          <MainContent
+            logout={logout}
+            habits={habits}
+            newHabit={newHabit}
+            setNewHabit={setNewHabit}
+            showSuggestionModal={showSuggestionModal}
+            setShowSuggestionModal={setShowSuggestionModal}
+            growthData={growthData}
+            recommendedDuration={recommendedDuration}
+            handleAddHabit={handleAddHabit}
+            handleStartFocusWithNavigation={handleStartFocusWithNavigation}
+          />
+        ) : <Navigate to="/login" />}
+      />
+      <Route
+        path="/login"
+        element={!isUserLoggedIn ? <Login /> : <Navigate to="/" />}
+      />
+      <Route
+        path="/register"
+        element={!isUserLoggedIn ? <Register /> : <Navigate to="/" />}
+      />
+      <Route
+        path="/focus"
+        element={isUserLoggedIn ? <FocusPage /> : <Navigate to="/login" />}
+      />
+    </Routes>
   );
 }
 

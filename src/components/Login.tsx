@@ -11,46 +11,49 @@ const Login: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const success = login(username, password);
     if (success) {
-      navigate('/');
+      // 延迟导航，确保状态和localStorage都已经更新
+      setTimeout(() => {
+        navigate('/');
+      }, 100);
     } else {
       setError('用户名或密码错误');
     }
   };
 
   return (
-    <div className="auth-container">
-      <h2>登录</h2>
-      <form onSubmit={handleSubmit} className="auth-form">
-        {error && <div className="error-message">{error}</div>}
-        <div className="form-group">
-          <label htmlFor="username">用户名</label>
-          <input
-            type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="password">密码</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">登录</button>
-      </form>
-      <p className="auth-link">
-        还没有账号？ <Link to="/register">注册</Link>
-      </p>
-    </div>
+      <div className="auth-container">
+        <h2>登录</h2>
+        <form onSubmit={handleSubmit} className="auth-form">
+          {error && <div className="error-message">{error}</div>}
+          <div className="form-group">
+            <label htmlFor="username">用户名</label>
+            <input
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="password">密码</label>
+            <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+            />
+          </div>
+          <button type="submit">登录</button>
+        </form>
+        <p className="auth-link">
+          还没有账号？ <Link to="/register">注册</Link>
+        </p>
+      </div>
   );
 };
 
