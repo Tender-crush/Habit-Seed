@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Habit, FocusSession, GrowthData } from '../types';
 import { saveHabits, getHabits, saveFocusSessions, getFocusSessions, saveGrowthData, getGrowthData } from '../utils/storage';
 
@@ -91,10 +91,10 @@ export const useHabits = (username: string | null) => {
       handleTimerComplete();
     }
     return () => window.clearInterval(interval);
-  }, [isTimerActive, timerSeconds]);
+  }, [isTimerActive, timerSeconds, handleTimerComplete]);
 
   // 处理习惯记录
-  const handleAddHabit = (e: React.FormEvent) => {
+  const handleAddHabit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!newHabit.trim()) return;
 
@@ -112,22 +112,22 @@ export const useHabits = (username: string | null) => {
     setTimeout(() => {
       setShowSuggestionModal(true);
     }, 500);
-  };
+  }, [newHabit]);
 
   // 处理专注任务开始
-  const handleStartFocus = () => {
+  const handleStartFocus = useCallback(() => {
     setShowSuggestionModal(false);
     setTimerSeconds(recommendedDuration * 60);
     setIsTimerActive(true);
-  };
+  }, [recommendedDuration]);
 
   // 处理专注任务取消
-  const handleCancelFocus = () => {
+  const handleCancelFocus = useCallback(() => {
     setIsTimerActive(false);
-  };
+  }, []);
 
   // 处理专注任务完成
-  const handleTimerComplete = () => {
+  const handleTimerComplete = useCallback(() => {
     setIsTimerActive(false);
 
     const session: FocusSession = {
@@ -140,10 +140,10 @@ export const useHabits = (username: string | null) => {
     setFocusSessions(prev => [session, ...prev]);
     updateGrowthData();
     updateRecommendation();
-  };
+  }, [recommendedDuration, updateGrowthData, updateRecommendation]);
 
   // 更新成长数据
-  const updateGrowthData = () => {
+  const updateGrowthData = useCallback(() => {
     setGrowthData(prev => {
       const newExperience = prev.experience + 10;
       let newLevel = prev.level;
@@ -162,10 +162,10 @@ export const useHabits = (username: string | null) => {
         totalSessions: prev.totalSessions + 1
       };
     });
-  };
+  }, []);
 
   // 更新推荐时长
-  const updateRecommendation = () => {
+  const updateRecommendation = useCallback(() => {
     const completedSessions = focusSessions.length + 1;
     if (completedSessions >= 3 && recommendedDuration === 5) {
       setRecommendedDuration(15);
@@ -174,14 +174,14 @@ export const useHabits = (username: string | null) => {
     } else if (completedSessions >= 15 && recommendedDuration === 30) { // 降低升级条件
       setRecommendedDuration(45);
     }
-  };
+  }, [focusSessions.length, recommendedDuration]);
 
   // 格式化时间
-  const formatTime = (seconds: number) => {
+  const formatTime = useCallback((seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
+  }, []);
 
   return {
     habits,
