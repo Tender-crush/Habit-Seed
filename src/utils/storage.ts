@@ -37,7 +37,12 @@ export const saveHabits = (username: string | null, habits: Habit[]): void => {
 export const getHabits = (username: string | null): Habit[] => {
   if (!username) return [];
   const data = localStorage.getItem(`${STORAGE_PREFIX}habits_${username}`);
-  return data ? JSON.parse(data) : [];
+  if (!data) return [];
+  const habits = JSON.parse(data);
+  return habits.map((habit: any) => ({
+    ...habit,
+    timestamp: new Date(habit.timestamp)
+  }));
 };
 
 // 专注任务相关
@@ -49,7 +54,12 @@ export const saveFocusSessions = (username: string | null, sessions: FocusSessio
 export const getFocusSessions = (username: string | null): FocusSession[] => {
   if (!username) return [];
   const data = localStorage.getItem(`${STORAGE_PREFIX}focusSessions_${username}`);
-  return data ? JSON.parse(data) : [];
+  if (!data) return [];
+  const sessions = JSON.parse(data);
+  return sessions.map((session: any) => ({
+    ...session,
+    timestamp: new Date(session.timestamp)
+  }));
 };
 
 // 成长数据相关

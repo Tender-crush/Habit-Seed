@@ -24,11 +24,11 @@ export const useHabits = (username: string | null) => {
       const loadedHabits = getHabits(username);
       const loadedSessions = getFocusSessions(username);
       const loadedGrowth = getGrowthData(username);
-      
+
       setHabits(loadedHabits);
       setFocusSessions(loadedSessions);
       setGrowthData(loadedGrowth);
-      
+
       // 根据已完成的专注任务数量更新推荐时长
       const completedSessions = loadedSessions.length;
       if (completedSessions >= 15) {
@@ -80,19 +80,6 @@ export const useHabits = (username: string | null) => {
     }
   }, [growthData, username]);
 
-  // 计时器逻辑
-  useEffect(() => {
-    let interval: number;
-    if (isTimerActive && timerSeconds > 0) {
-      interval = window.setInterval(() => {
-        setTimerSeconds(prev => prev - 1);
-      }, 1000);
-    } else if (timerSeconds === 0 && isTimerActive) {
-      handleTimerComplete();
-    }
-    return () => window.clearInterval(interval);
-  }, [isTimerActive, timerSeconds, handleTimerComplete]);
-
   // 处理习惯记录
   const handleAddHabit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +88,7 @@ export const useHabits = (username: string | null) => {
     const habit: Habit = {
       id: Date.now().toString(),
       name: newHabit,
-      completed: true,
+      completed: false,
       timestamp: new Date()
     };
 
@@ -125,22 +112,6 @@ export const useHabits = (username: string | null) => {
   const handleCancelFocus = useCallback(() => {
     setIsTimerActive(false);
   }, []);
-
-  // 处理专注任务完成
-  const handleTimerComplete = useCallback(() => {
-    setIsTimerActive(false);
-
-    const session: FocusSession = {
-      id: Date.now().toString(),
-      duration: recommendedDuration,
-      completed: true,
-      timestamp: new Date()
-    };
-
-    setFocusSessions(prev => [session, ...prev]);
-    updateGrowthData();
-    updateRecommendation();
-  }, [recommendedDuration, updateGrowthData, updateRecommendation]);
 
   // 更新成长数据
   const updateGrowthData = useCallback(() => {
@@ -175,6 +146,39 @@ export const useHabits = (username: string | null) => {
       setRecommendedDuration(45);
     }
   }, [focusSessions.length, recommendedDuration]);
+
+  // 处理专注任务完成
+  const handleTimerComplete = useCallback(() => {
+    setIsTimerActive(false);
+
+    const session: FocusSession = {
+      id: Date.now().toString(),
+      duration: recommendedDuration,
+      completed: true,
+      timestamp: new Date()
+    };
+
+    setFocusSessions(prev => [session, ...prev]);
+    updateGrowthData();
+    updateRecommendation();
+  }, [recommendedDuration, updateGrowthData, updateRecommendation]);
+
+  // 计时器逻辑
+  useEffect(() => {
+    let interval: number | undefined;
+    if (isTimerActive && timerSeconds > 0) {
+      interval = window.setInterval(() => {
+        setTimerSeconds(prev => prev - 1);
+      }, 1000);
+    } else if (timerSeconds === 0 && isTimerActive) {
+      handleTimerComplete();
+    }
+    return () => {
+      if (interval) {
+        window.clearInterval(interval);
+      }
+    };
+  }, [isTimerActive, timerSeconds, handleTimerComplete]);
 
   // 格式化时间
   const formatTime = useCallback((seconds: number) => {
